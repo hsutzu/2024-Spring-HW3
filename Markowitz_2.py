@@ -67,6 +67,9 @@ class MyPortfolio:
         # Get the assets by excluding the specified column
         assets = self.price.columns[self.price.columns != self.exclude]
 
+        """
+        TODO: Complete Task 4 Below
+        """
         # Calculate the rolling returns for the lookback period
         rolling_returns = self.price[assets].pct_change(self.lookback)
 
@@ -95,7 +98,9 @@ class MyPortfolio:
         self.portfolio_weights = pd.DataFrame(index=self.price.index, columns=self.price.columns)
         self.portfolio_weights.loc[:, assets] = weights
         self.portfolio_weights[self.exclude] = 0  # Set exclude column weights to 0
-
+        """
+        TODO: Complete Task 4 Above
+        """
         # Ensure the weights are filled forward for all time periods
         self.portfolio_weights.ffill(inplace=True)
         self.portfolio_weights.fillna(0, inplace=True)

@@ -124,10 +124,10 @@ class RiskParityPortfolio:
         """
         rolling_std = df_returns[assets].rolling(window=self.lookback).std()
         # Calculate the inverse of the standard deviation
-        inv_std = 1 / rolling_std
+        inverse_std = 1 / rolling_std
 
         # Normalize the weights so that they sum to 1
-        self.portfolio_weights = inv_std.div(inv_std.sum(axis=1), axis=0)
+        self.portfolio_weights = inverse_std.div(inverse_std.sum(axis=1), axis=0)
         new_column_data = [0] * len(df)
         self.portfolio_weights.insert(0, 'SPY', new_column_data)
         self.portfolio_weights.loc['2019-03-14', :] = 0
