@@ -10,8 +10,6 @@ import gurobipy as gp
 import warnings
 import argparse
 from scipy.optimize import minimize
-
-
 """
 Project Setup
 """
@@ -65,17 +63,10 @@ class MyPortfolio:
         self.gamma = gamma
 
     def calculate_weights(self):
+
         # Get the assets by excluding the specified column
         assets = self.price.columns[self.price.columns != self.exclude]
 
-        # Calculate the portfolio weights
-        self.portfolio_weights = pd.DataFrame(
-            index=self.price.index, columns=self.price.columns
-        )
-
-        """
-        TODO: Complete Task 4 Below
-        """
         # Calculate the rolling returns for the lookback period
         rolling_returns = self.price[assets].pct_change(self.lookback)
 
@@ -105,10 +96,7 @@ class MyPortfolio:
         self.portfolio_weights.loc[:, assets] = weights
         self.portfolio_weights[self.exclude] = 0  # Set exclude column weights to 0
 
-        """
-        TODO: Complete Task 4 Above
-        """
-
+        # Ensure the weights are filled forward for all time periods
         self.portfolio_weights.ffill(inplace=True)
         self.portfolio_weights.fillna(0, inplace=True)
 
@@ -193,6 +181,8 @@ class AssignmentJudge:
     def check_sharp_ratio_greater_than_one(self):
         if not self.check_portfolio_position(self.mp[0]):
             return 0
+        print(self.report_metrics(Bdf, self.Bmp)[0])
+        print(self.report_metrics(Bdf, self.Bmp)[1])
         if self.report_metrics(df, self.mp)[1] > 1:
             print("Problem 4.1 Success - Get 10 points")
             return 10
@@ -203,6 +193,7 @@ class AssignmentJudge:
     def check_sharp_ratio_greater_than_spy(self):
         if not self.check_portfolio_position(self.mp[0]):
             return 0
+        print(self.report_metrics(Bdf, self.Bmp)[0])
         if (
             self.report_metrics(Bdf, self.Bmp)[1]
             > self.report_metrics(Bdf, self.Bmp)[0]

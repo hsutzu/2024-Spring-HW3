@@ -60,16 +60,18 @@ class EqualWeightPortfolio:
 
     def calculate_weights(self):
         # Get the assets by excluding the specified column
+        
         assets = df.columns[df.columns != self.exclude]
-        self.portfolio_weights = pd.DataFrame(index=df.index, columns=df.columns)
 
         """
         TODO: Complete Task 1 Below
         """
-        assets = df.columns[df.columns != self.exclude]
-        equal_weight = 1 / len(assets)  # Calculate equal weight for each asset
-        self.portfolio_weights = pd.DataFrame(index=df.index, columns=assets)
-        self.portfolio_weights.fillna(equal_weight, inplace=True)  # Assign equal weight to each asset
+        num_assets = len(assets)
+        
+        # Calculate equal weights for each asset
+        equal_weight = 1 / num_assets
+        self.portfolio_weights = pd.DataFrame(equal_weight, index=df.index, columns=df.columns)
+        self.portfolio_weights[self.exclude] = 0
         """
         TODO: Complete Task 1 Above
         """
@@ -94,7 +96,7 @@ class EqualWeightPortfolio:
         # Ensure portfolio returns are calculated
         if not hasattr(self, "portfolio_returns"):
             self.calculate_portfolio_returns()
-
+        
         return self.portfolio_weights, self.portfolio_returns
 
 
@@ -117,16 +119,15 @@ class RiskParityPortfolio:
         # Calculate the portfolio weights
         self.portfolio_weights = pd.DataFrame(index=df.index, columns=df.columns)
         self.portfolio_weights[self.exclude] = 0
-
         """
         TODO: Complete Task 2 Below
         """
         rolling_std = df_returns[assets].rolling(window=self.lookback).std()
         # Calculate the inverse of the standard deviation
-        inverse_std = 1 / rolling_std
+        inv_std = 1 / rolling_std
 
         # Normalize the weights so that they sum to 1
-        self.portfolio_weights = inverse_std.div(inverse_std.sum(axis=1), axis=0)
+        self.portfolio_weights = inv_std.div(inv_std.sum(axis=1), axis=0)
         new_column_data = [0] * len(df)
         self.portfolio_weights.insert(0, 'SPY', new_column_data)
         self.portfolio_weights.loc['2019-03-14', :] = 0
@@ -156,7 +157,8 @@ class RiskParityPortfolio:
         # Ensure portfolio returns are calculated
         if not hasattr(self, "portfolio_returns"):
             self.calculate_portfolio_returns()
-
+        #print(self.portfolio_weights)
+        #print(self.portfolio_returns)
         return self.portfolio_weights, self.portfolio_returns
 
 
@@ -205,12 +207,14 @@ class MeanVariancePortfolio:
 
                 # Sample Code: Initialize Decision w and the Objective
                 # NOTE: You can modify the following code
-                w = model.addMVar(n, name="w", ub=1)
-                model.setObjective(w.sum(), gp.GRB.MAXIMIZE)
-                
+                # w = model.addMVar(n, name="w", ub=1)
+                # model.setObjective(w.sum(), gp.GRB.MAXIMIZE)
+
+                w = model.addMVar(n, name='w', lb=0, ub=1)
+                model.setObjective(w @ mu - (gamma / 2) * w @ Sigma @ w, gp.GRB.MAXIMIZE)
+
                 # Add constraints
                 model.addConstr(w.sum() == 1, name='budget')
-
                 """
                 TODO: Complete Task 3 Below
                 """
