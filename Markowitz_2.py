@@ -9,6 +9,8 @@ import quantstats as qs
 import gurobipy as gp
 import warnings
 import argparse
+from scipy.optimize import minimize
+
 
 """
 Project Setup
@@ -74,6 +76,34 @@ class MyPortfolio:
         """
         TODO: Complete Task 4 Below
         """
+        # Calculate the rolling returns for the lookback period
+        rolling_returns = self.price[assets].pct_change(self.lookback)
+
+        # Calculate the mean returns and covariance matrix for the lookback period
+        mean_returns = rolling_returns.mean()
+        cov_matrix = rolling_returns.cov()
+
+        # Define the objective function for mean-variance optimization
+        def objective(weights):
+            return - (weights @ mean_returns) / np.sqrt(weights @ cov_matrix @ weights)
+
+        # Define the constraints and bounds
+        constraints = ({'type': 'eq', 'fun': lambda weights: np.sum(weights) - 1})
+        bounds = [(0, 1) for _ in assets]
+
+        # Initial guess for the weights
+        initial_weights = np.array([1/len(assets)] * len(assets))
+
+        # Solve the optimization problem
+        result = minimize(objective, initial_weights, method='SLSQP', bounds=bounds, constraints=constraints)
+        
+        # Get the optimized weights
+        weights = result.x
+
+        # Convert the weights to a DataFrame
+        self.portfolio_weights = pd.DataFrame(index=self.price.index, columns=self.price.columns)
+        self.portfolio_weights.loc[:, assets] = weights
+        self.portfolio_weights[self.exclude] = 0  # Set exclude column weights to 0
 
         """
         TODO: Complete Task 4 Above

@@ -66,7 +66,10 @@ class EqualWeightPortfolio:
         """
         TODO: Complete Task 1 Below
         """
-
+        assets = df.columns[df.columns != self.exclude]
+        equal_weight = 1 / len(assets)  # Calculate equal weight for each asset
+        self.portfolio_weights = pd.DataFrame(index=df.index, columns=assets)
+        self.portfolio_weights.fillna(equal_weight, inplace=True)  # Assign equal weight to each asset
         """
         TODO: Complete Task 1 Above
         """
@@ -113,15 +116,25 @@ class RiskParityPortfolio:
 
         # Calculate the portfolio weights
         self.portfolio_weights = pd.DataFrame(index=df.index, columns=df.columns)
+        self.portfolio_weights[self.exclude] = 0
 
         """
         TODO: Complete Task 2 Below
         """
+        rolling_std = df_returns[assets].rolling(window=self.lookback).std()
+        # Calculate the inverse of the standard deviation
+        inverse_std = 1 / rolling_std
 
+        # Normalize the weights so that they sum to 1
+        self.portfolio_weights = inverse_std.div(inverse_std.sum(axis=1), axis=0)
+        new_column_data = [0] * len(df)
+        self.portfolio_weights.insert(0, 'SPY', new_column_data)
+        self.portfolio_weights.loc['2019-03-14', :] = 0
+        self.portfolio_weights.to_csv("test.csv")
         """
         TODO: Complete Task 2 Above
         """
-
+        self.portfolio_weights = self.portfolio_weights.shift(1)
         self.portfolio_weights.ffill(inplace=True)
         self.portfolio_weights.fillna(0, inplace=True)
 
@@ -194,6 +207,9 @@ class MeanVariancePortfolio:
                 # NOTE: You can modify the following code
                 w = model.addMVar(n, name="w", ub=1)
                 model.setObjective(w.sum(), gp.GRB.MAXIMIZE)
+                
+                # Add constraints
+                model.addConstr(w.sum() == 1, name='budget')
 
                 """
                 TODO: Complete Task 3 Below
